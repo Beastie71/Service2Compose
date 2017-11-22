@@ -110,15 +110,19 @@ func main() {
 						fmt.Printf("\"%d:%d\"\n",port.PublishedPort,port.TargetPort)
 					}	
 				}
-				fmt.Println("    networks:")
-				for _, thisNetwork := range theServices[serviceID].Spec.Networks {
-					fmt.Println("      -",theNetworks[thisNetwork.Target].Name)
-					myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
+				if len(theServices[serviceID].Spec.Networks) != 0 {
+					fmt.Println("    networks:")
+					for _, thisNetwork := range theServices[serviceID].Spec.Networks {
+						fmt.Println("      -",theNetworks[thisNetwork.Target].Name)
+						myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
+					}
 				}
-				fmt.Println("    labels:")
-				for key, value := range theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Labels {
-					fmt.Printf("      - %s=%s\n",key,value)
-				}
+				if len(theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Labels) != 0 {
+					fmt.Println("    labels:")
+					for key, value := range theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Labels {
+						fmt.Printf("      - %s=%s\n",key,value)
+					}
+				}	
 				if len(theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Env) > 0 {
 					fmt.Println("    environment:")
 					for _, envVar := range theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Env {
