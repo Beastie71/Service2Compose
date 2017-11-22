@@ -68,30 +68,40 @@ func main() {
 			fmt.Println("services:")
 			myNetworks := make(map[string]string)
 			for _,serviceID := range services {
-				fmt.Printf("  %s:\n",theServices[serviceID].Spec.Networks[0].Aliases[0])
+				if len(theServices[serviceID].Spec.Networks) != 0 && len(theServices[serviceID].Spec.Networks[0].Aliases) != 0 {
+					fmt.Printf("  %s:\n",theServices[serviceID].Spec.Networks[0].Aliases[0])
+				} else {
+					fmt.Printf("  %s:\n", theServices[serviceID].Spec.Name)
+				}	
 				fmt.Println("    image: ",theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Image)
 				fmt.Println("    deploy:")
 				replicas := uint64(*theServices[serviceID].Spec.Mode.Replicated.Replicas)
 				fmt.Println("      replicas: ",strconv.FormatUint(replicas,10))
-				fmt.Println("      restart_policy:")
-				fmt.Println("        condition: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Condition)
-				fmt.Println("        delay: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Delay)
-				fmt.Println("        max_attempts: ",strconv.FormatUint(uint64(*theServices[serviceID].Spec.TaskTemplate.RestartPolicy.MaxAttempts),10))
-				fmt.Println("        window: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Window)
-				fmt.Println("      placement: ")
-				fmt.Println("        constraints:")
-				fmt.Print("          - ")
-				for loop, constraint := range theServices[serviceID].Spec.TaskTemplate.Placement.Constraints {
-					if loop == 0 {
-						fmt.Println(constraint)
-					} else {
-						fmt.Println("          -",constraint)
-					}	
+				if theServices[serviceID].Spec.TaskTemplate.RestartPolicy != nil {
+					fmt.Println("      restart_policy:")
+					fmt.Println("        condition: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Condition)
+					fmt.Println("        delay: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Delay)
+					fmt.Println("        max_attempts: ",strconv.FormatUint(uint64(*theServices[serviceID].Spec.TaskTemplate.RestartPolicy.MaxAttempts),10))
+					fmt.Println("        window: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Window)
 				}
-				fmt.Println("      labels:")
-				for key, value := range theServices[serviceID].Spec.Annotations.Labels {
-					fmt.Print("        - ")
-					fmt.Printf("%s=%s\n",strings.Trim(key," "),strings.Trim(value," "))
+				if len(theServices[serviceID].Spec.TaskTemplate.Placement.Constraints) != 0 {
+					fmt.Println("      placement: ")
+					fmt.Println("        constraints:")
+					fmt.Print("          - ")
+					for loop, constraint := range theServices[serviceID].Spec.TaskTemplate.Placement.Constraints {
+						if loop == 0 {
+							fmt.Println(constraint)
+						} else {
+							fmt.Println("          -",constraint)
+						}	
+					}
+				}
+				if len(theServices[serviceID].Spec.Annotations.Labels) != 0 {
+					fmt.Println("      labels:")
+					for key, value := range theServices[serviceID].Spec.Annotations.Labels {
+						fmt.Print("        - ")
+						fmt.Printf("%s=%s\n",strings.Trim(key," "),strings.Trim(value," "))
+					}
 				}
 				if len(theServices[serviceID].Endpoint.Spec.Ports) != 0  {
 					fmt.Println("    ports:")
@@ -116,25 +126,26 @@ func main() {
 					}
 					
 				}
-				if theServices[serviceID].Spec.TaskTemplate.LogDriver.Name == "" &&
-				   len(theServices[serviceID].Spec.TaskTemplate.LogDriver.Options) != 0   {
-					fmt.Println("    logging:")
-					fmt.Println("      options:")
-					for key, value := range theServices[serviceID].Spec.TaskTemplate.LogDriver.Options  {
-						fmt.Printf("        %s: %s\n",key,value)
+				if theServices[serviceID].Spec.TaskTemplate.LogDriver != nil {
+					if theServices[serviceID].Spec.TaskTemplate.LogDriver.Name == "" &&
+					   len(theServices[serviceID].Spec.TaskTemplate.LogDriver.Options) != 0   {
+						fmt.Println("    logging:")
+						fmt.Println("      options:")
+						for key, value := range theServices[serviceID].Spec.TaskTemplate.LogDriver.Options  {
+							fmt.Printf("        %s: %s\n",key,value)
+						}
+					} else if theServices[serviceID].Spec.TaskTemplate.LogDriver.Name != "" && 
+					   len(theServices[serviceID].Spec.TaskTemplate.LogDriver.Options) != 0   {
+						fmt.Println("    logging:")
+						fmt.Println("      driver:", theServices[serviceID].Spec.TaskTemplate.LogDriver.Name)
+						fmt.Println("      options:")
+						for key, value := range theServices[serviceID].Spec.TaskTemplate.LogDriver.Options  {
+							fmt.Printf("        %s: %s\n",key,value)
+						}
+					} else {
+						fmt.Println("    logging:")
+						fmt.Println("      driver:", theServices[serviceID].Spec.TaskTemplate.LogDriver.Name)			
 					}
-				} else if theServices[serviceID].Spec.TaskTemplate.LogDriver.Name != "" && 
-				   len(theServices[serviceID].Spec.TaskTemplate.LogDriver.Options) != 0   {
-					fmt.Println("    logging:")
-					fmt.Println("      driver:", theServices[serviceID].Spec.TaskTemplate.LogDriver.Name)
-					fmt.Println("      options:")
-					for key, value := range theServices[serviceID].Spec.TaskTemplate.LogDriver.Options  {
-						fmt.Printf("        %s: %s\n",key,value)
-					}
-				} else {
-					fmt.Println("    logging:")
-					fmt.Println("      driver:", theServices[serviceID].Spec.TaskTemplate.LogDriver.Name)
-					
 				}
 				fmt.Println()	
 			}
