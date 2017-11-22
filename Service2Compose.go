@@ -12,14 +12,20 @@ import (
 	"flag"
 	"strings"
 	"strconv"
+	"os"
 )
 //  Program assumes you are running inside an environment setup with a client bundle
 
 func main() {
 	//setup flags, right now just one	
 	stackPtr := flag.String("stack", "*", "a string of the pattern to match for stacks")
+	helpPtr := flag.Bool("help", false, "display help message")
 	flag.Parse()
-
+	
+	if *helpPtr {
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
 	//setup client environment
 
 	cli, err := client.NewEnvClient()
