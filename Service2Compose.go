@@ -20,6 +20,7 @@ func main() {
 	//setup flags, right now just one	
 	stackPtr := flag.String("stack", "*", "a string of the pattern to match for stacks")
 	helpPtr := flag.Bool("help", false, "display help message")
+	unamePtr := flag.Bool("unname", false, "do not set network name, i.e. use default")
 	flag.Parse()
 	
 	if *helpPtr {
@@ -190,10 +191,15 @@ func main() {
 			if len(myNetworks) != 0 {
 				fmt.Println("networks:")
 				for netID,netName := range myNetworks {
-					fmt.Printf("  %s:\n",netName)
 					if theNetworks[netID].Labels["com.docker.stack.namespace"] != "" {
+						if *unamePtr {
+							fmt.Println("  default:")
+						} else {
+							fmt.Printf("  %s:\n",netName)						
+						}
 						fmt.Println("    driver: overlay")
 					} else {
+						fmt.Printf("  %s:\n",netName)
 						fmt.Println("    external: true")
 					}
 				}
