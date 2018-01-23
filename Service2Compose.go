@@ -143,8 +143,14 @@ func main() {
 				if len(theServices[serviceID].Spec.Networks) != 0 {
 					fmt.Println("    networks:")
 					for _, thisNetwork := range theServices[serviceID].Spec.Networks {
-						fmt.Println("      -",theNetworks[thisNetwork.Target].Name)
-						myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
+						if theNetworks[thisNetwork.Target].Labels["com.docker.stack.namespace"] != "" {
+							if *unamePtr {
+								fmt.Println("      - default")
+							} else {
+								fmt.Println("      -",theNetworks[thisNetwork.Target].Name)						
+							}
+						 myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
+						}
 					}
 				}
 				//labels again, for the service specification
