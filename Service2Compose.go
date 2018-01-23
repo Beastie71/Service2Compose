@@ -149,8 +149,10 @@ func main() {
 							} else {
 								fmt.Println("      -",theNetworks[thisNetwork.Target].Name)						
 							}
-						 myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
+						} else {
+							fmt.Println("      -",theNetworks[thisNetwork.Target].Name)
 						}
+						myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
 					}
 				}
 				//labels again, for the service specification
