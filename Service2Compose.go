@@ -105,9 +105,21 @@ func main() {
 				if theServices[serviceID].Spec.TaskTemplate.RestartPolicy != nil {
 					fmt.Println("      restart_policy:")
 					fmt.Println("        condition: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Condition)
-					fmt.Println("        delay: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Delay)
-					fmt.Println("        max_attempts: ",strconv.FormatUint(uint64(*theServices[serviceID].Spec.TaskTemplate.RestartPolicy.MaxAttempts),10))
-					fmt.Println("        window: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Window)
+					if theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Delay == nil {
+						fmt.Println("        delay: 3s")
+					} else {
+						fmt.Println("        delay: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Delay)
+					}
+					if theServices[serviceID].Spec.TaskTemplate.RestartPolicy.MaxAttempts == nil {
+						fmt.Println("        max_attempts: 0")
+					} else {
+						fmt.Println("        max_attempts: ",strconv.FormatUint(uint64(*theServices[serviceID].Spec.TaskTemplate.RestartPolicy.MaxAttempts),10))
+					}	
+					if theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Window == nil {
+						fmt.Println("        window: 0s")
+					} else {
+						fmt.Println("        window: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Window)
+					}	
 				}
 				//if they have constraints we need to deal with that
 				if len(theServices[serviceID].Spec.TaskTemplate.Placement.Constraints) != 0 {
