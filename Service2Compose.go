@@ -19,8 +19,8 @@ import (
 func main() {
 	//setup flags, right now just one	
 	stackPtr := flag.String("stack", "*", "a string of the pattern to match for stacks")
-	helpPtr := flag.Bool("help", false, "display help message")
 	unamePtr := flag.Bool("unname", false, "do not set network name, i.e. use default")
+	helpPtr := flag.Bool("help", false, "display help message")
 	flag.Parse()
 	
 	if *helpPtr {
@@ -166,14 +166,21 @@ func main() {
 						}
 						myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
 					}
-				}
-				//labels again, for the service specification
+				}				//labels again, for the service specification
 				if len(theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Labels) != 0 {
 					fmt.Println("    labels:")
 					for key, value := range theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Labels {
 						fmt.Printf("      - %s=%s\n",key,value)
 					}
 				}	
+				//Mounts for the service specification
+				if len(theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Mounts) != 0 {
+					fmt.Println("    volumes:")
+					for theMount := range theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Mounts {
+						fmt.Printf("      - %s:%s\n",theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Mounts[theMount].Source,theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Mounts[theMount].Target)
+					}
+				}	
+
 				//and any environment variables
 				if len(theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Env) > 0 {
 					fmt.Println("    environment:")
