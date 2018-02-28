@@ -69,6 +69,7 @@ func main() {
 	}
 	//setup stuff to do matching for the stackname and what we actually want for output
 	matched := false
+	matched2 := false
 	all := false
 	wildcard := strings.Compare(*stackPtr,"*")
 	if wildcard == 0 {
@@ -81,7 +82,8 @@ func main() {
 	//so now we go through the stacks to find the one(s) that match the request and then do some work
 	for stackname, services := range stacks {
 		matched, _ = regexp.MatchString(*stackPtr,stackname)
-		if matched || all {
+		matched2, _ = regexp.MatchString(stackname,*stackPtr)
+		if (matched && matched2) || all {
 			fmt.Println("Stackname is - ", stackname)
 			fmt.Println()
 			//And here we go actually dumping out the compose
