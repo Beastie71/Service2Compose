@@ -157,15 +157,9 @@ func main() {
 					for _, thisNetwork := range theServices[serviceID].Spec.Networks {
 						if theNetworks[thisNetwork.Target].Labels["com.docker.stack.namespace"] != "" {
 							if *unamePtr {
-								match1 := false
-								match2 := false
-								match1, _ = regexp.MatchString(stackname,theNetworks[thisNetwork.Target].Name)
-								match2, _ = regexp.MatchString("default",theNetworks[thisNetwork.Target].Name)
-								if (match1 && match2 ) {
-								    fmt.Println("      - default")
-								} else {
-									fmt.Println("      -",theNetworks[thisNetwork.Target].Name)
-								}   
+								prefix := stackname + "_"
+								theName := strings.TrimPrefix(theNetworks[thisNetwork.Target].Name, prefix)
+								fmt.Println("      -",theName)
 							} else {
 								fmt.Println("      -",theNetworks[thisNetwork.Target].Name)						
 							}
@@ -228,21 +222,30 @@ func main() {
 				for netID,netName := range myNetworks {
 					if theNetworks[netID].Labels["com.docker.stack.namespace"] != "" {
 						if *unamePtr {
-								match1 := false
-								match2 := false
-								match1, _ = regexp.MatchString(stackname,netName)
-								match2, _ = regexp.MatchString("default",netName)
-								if (match1 && match2 ) {
-								    fmt.Println(" default")
-								} else {
-									fmt.Println(" ",netName)
-								}   
+							prefix := stackname + "_"
+							theName := strings.TrimPrefix(netName, prefix)
+							fmt.Printf("  %s:\n",theName)
 						} else {
 								fmt.Println(" ",netName)					
 						}
-						fmt.Println("    driver: overlay")
-						fmt.Println("    labels:")
-						fmt.Println("       com.docker.ucp.access.label: ",theNetworks[netID].Labels["com.docker.ucp.access.label"])
+						fmt.Println("    driver:",theNetworks[netID].Driver)
+						fmt.Println("    driver_opts:")
+						if(len(theNetworks[netID].Options) != 0 ) {
+							for name, value := range theNetworks[netID].Options {
+								match1, _ := regexp.MatchString("vxlanid_list",name)
+								if ( ! match1 ) {
+									if ( value == "" ) {
+										fmt.Printf("        %s: \"\"\n",name)
+									} else {
+									    fmt.Printf("        %s: %s\n",name,value)
+									}
+								}	
+							}
+						}
+						if ( len(theNetworks[netID].Labels["com.docker.ucp.access.label"]) != 0 ) {
+						  fmt.Println("    labels:")
+						  fmt.Println("       com.docker.ucp.access.label:",theNetworks[netID].Labels["com.docker.ucp.access.label"])
+						}  
 					} else {
 						fmt.Printf("  %s:\n",netName)
 						fmt.Println("    external: true")
