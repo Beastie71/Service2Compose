@@ -69,7 +69,6 @@ func main() {
 	}
 	//setup stuff to do matching for the stackname and what we actually want for output
 	matched := false
-	matched2 := false
 	all := false
 	wildcard := strings.Compare(*stackPtr,"*")
 	if wildcard == 0 {
@@ -82,8 +81,7 @@ func main() {
 	//so now we go through the stacks to find the one(s) that match the request and then do some work
 	for stackname, services := range stacks {
 		matched, _ = regexp.MatchString(*stackPtr,stackname)
-		matched2, _ = regexp.MatchString(stackname,*stackPtr)
-		if (matched && matched2) || all {
+		if matched || all {
 			fmt.Println("Stackname is - ", stackname)
 			fmt.Println()
 			//And here we go actually dumping out the compose
@@ -159,7 +157,15 @@ func main() {
 					for _, thisNetwork := range theServices[serviceID].Spec.Networks {
 						if theNetworks[thisNetwork.Target].Labels["com.docker.stack.namespace"] != "" {
 							if *unamePtr {
-								fmt.Println("      - default")
+								match1 := false
+								match2 := false
+								match1, _ = regexp.MatchString(stackname,theNetworks[thisNetwork.Target].Name)
+								match2, _ = regexp.MatchString("default",theNetworks[thisNetwork.Target].Name)
+								if (match1 && match2 ) {
+								    fmt.Println("      - default")
+								} else {
+									fmt.Println("      -",theNetworks[thisNetwork.Target].Name)
+								}   
 							} else {
 								fmt.Println("      -",theNetworks[thisNetwork.Target].Name)						
 							}
@@ -222,11 +228,21 @@ func main() {
 				for netID,netName := range myNetworks {
 					if theNetworks[netID].Labels["com.docker.stack.namespace"] != "" {
 						if *unamePtr {
-							fmt.Println("  default:")
+								match1 := false
+								match2 := false
+								match1, _ = regexp.MatchString(stackname,netName)
+								match2, _ = regexp.MatchString("default",netName)
+								if (match1 && match2 ) {
+								    fmt.Println(" default")
+								} else {
+									fmt.Println(" ",netName)
+								}   
 						} else {
-							fmt.Printf("  %s:\n",netName)						
+								fmt.Println(" ",netName)					
 						}
 						fmt.Println("    driver: overlay")
+						fmt.Println("    labels:")
+						fmt.Println("       com.docker.ucp.access.label: ",theNetworks[netID].Labels["com.docker.ucp.access.label"])
 					} else {
 						fmt.Printf("  %s:\n",netName)
 						fmt.Println("    external: true")
