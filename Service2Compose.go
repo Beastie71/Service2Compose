@@ -152,9 +152,10 @@ func main() {
 					}	
 				}
 				//yes you can have a service on no network, so we need to check that
-				if len(theServices[serviceID].Spec.Networks) != 0 {
+				//fmt.Println(theServices[serviceID].Spec.TaskTemplate.Networks)
+				if len(theServices[serviceID].Spec.TaskTemplate.Networks) != 0 {
 					fmt.Println("    networks:")
-					for _, thisNetwork := range theServices[serviceID].Spec.Networks {
+					for _, thisNetwork := range theServices[serviceID].Spec.TaskTemplate.Networks {
 						if theNetworks[thisNetwork.Target].Labels["com.docker.stack.namespace"] != "" {
 							if *unamePtr {
 								prefix := stackname + "_"
