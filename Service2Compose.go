@@ -169,7 +169,24 @@ func main() {
 						}
 						myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
 					}
-				}				//labels again, for the service specification
+				} else if len(theServices[serviceID].Spec.Networks) != 0 {
+					fmt.Println("    networks:")
+					for _, thisNetwork := range theServices[serviceID].Spec.Networks {
+						if theNetworks[thisNetwork.Target].Labels["com.docker.stack.namespace"] != "" {
+							if *unamePtr {
+								prefix := stackname + "_"
+								theName := strings.TrimPrefix(theNetworks[thisNetwork.Target].Name, prefix)
+								fmt.Println("      -",theName)
+							} else {
+								fmt.Println("      -",theNetworks[thisNetwork.Target].Name)						
+							}
+						} else {
+							fmt.Println("      -",theNetworks[thisNetwork.Target].Name)
+						}
+						myNetworks[thisNetwork.Target] = theNetworks[thisNetwork.Target].Name
+					}
+				}						
+					 				//labels again, for the service specification
 				if len(theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Labels) != 0 {
 					fmt.Println("    labels:")
 					for key, value := range theServices[serviceID].Spec.TaskTemplate.ContainerSpec.Labels {
