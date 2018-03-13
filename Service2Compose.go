@@ -247,8 +247,8 @@ func main() {
 								fmt.Println(" ",netName)					
 						}
 						fmt.Println("    driver:",theNetworks[netID].Driver)
-						fmt.Println("    driver_opts:")
 						if(len(theNetworks[netID].Options) != 0 ) {
+							fmt.Println("    driver_opts:")
 							for name, value := range theNetworks[netID].Options {
 								match1, _ := regexp.MatchString("vxlanid_list",name)
 								if ( ! match1 ) {
