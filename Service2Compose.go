@@ -20,6 +20,7 @@ func main() {
 	//setup flags, right now just one	
 	stackPtr := flag.String("stack", "*", "a string of the pattern to match for stacks")
 	unamePtr := flag.Bool("unname", false, "do not set network name, i.e. use default")
+	encryptPtr := flag.Bool("encrypt", false, "force networks to be created encrypted")
 	helpPtr := flag.Bool("help", false, "display help message")
 	flag.Parse()
 	
@@ -248,16 +249,26 @@ func main() {
 						}
 						fmt.Println("    driver:",theNetworks[netID].Driver)
 						if(len(theNetworks[netID].Options) != 0 ) {
-							fmt.Println("    driver_opts:")
+							optString := ""
+							matchEncrypted := false
 							for name, value := range theNetworks[netID].Options {
 								match1, _ := regexp.MatchString("vxlanid_list",name)
+								match2, _ := regexp.MatchString("encrypted",name)
+								matchEncrypted = matchEncrypted || match2
 								if ( ! match1 ) {
 									if ( value == "" ) {
-										fmt.Printf("        %s: \"\"\n",name)
+										optString = optString + fmt.Sprintf("        %s: \"\"\n",name)
 									} else {
-									    fmt.Printf("        %s: %s\n",name,value)
+									    optString = optString + fmt.Sprintf("        %s: %s\n",name,value)
 									}
 								}	
+							}
+							if ( ! matchEncrypted && *encryptPtr ) {
+								optString = optString + fmt.Sprintf("        encrypted: \"\"\n")
+							}
+							if (len(optString) > 0 ) {
+								fmt.Println("    driver_opts:")
+								fmt.Printf("%s",optString)
 							}
 						}
 						if ( len(theNetworks[netID].Labels["com.docker.ucp.access.label"]) != 0 ) {
