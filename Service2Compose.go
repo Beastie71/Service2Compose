@@ -314,7 +314,7 @@ func main() {
 							theName := strings.TrimPrefix(netName, prefix)
 							fmt.Printf("  %s:\n",theName)
 						} else {
-								fmt.Println(" ",netName)					
+								fmt.Printf("  %s:\n",netName)					
 						}
 						fmt.Println("    driver:",theNetworks[netID].Driver)
 						if(len(theNetworks[netID].Options) != 0 ) {
