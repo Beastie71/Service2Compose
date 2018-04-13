@@ -86,7 +86,7 @@ func main() {
 			fmt.Println("Stackname is - ", stackname)
 			fmt.Println()
 			//And here we go actually dumping out the compose
-			fmt.Printf("version: '3'\n\n")
+			fmt.Printf("version: '3.3'\n\n")
 			fmt.Println("services:")
 			myNetworks := make(map[string]string)
 			for _,serviceID := range services {
@@ -123,6 +123,54 @@ func main() {
 						fmt.Println("        window: ",theServices[serviceID].Spec.TaskTemplate.RestartPolicy.Window)
 					}	
 				}
+				if ( theServices[serviceID].Spec.UpdateConfig != nil) {
+					fmt.Println("      update_config:")
+				    if ( theServices[serviceID].Spec.UpdateConfig.Parallelism != 0 ) {
+				    	fmt.Printf("        parallelism: %d\n",theServices[serviceID].Spec.UpdateConfig.Parallelism)
+				    }
+				    if ( theServices[serviceID].Spec.UpdateConfig.Delay.String() != "" ) {
+				    	fmt.Printf("        delay: %s\n",theServices[serviceID].Spec.UpdateConfig.Delay.String())
+				    }
+   				    if ( theServices[serviceID].Spec.UpdateConfig.FailureAction != "" ) {
+				    	fmt.Printf("        failure_action: %s\n",theServices[serviceID].Spec.UpdateConfig.FailureAction)
+				    }
+				    if ( theServices[serviceID].Spec.UpdateConfig.Monitor.String() != "" ) {
+				    	fmt.Printf("        monitor: %s\n",theServices[serviceID].Spec.UpdateConfig.Monitor.String())
+				    }
+				    if ( theServices[serviceID].Spec.UpdateConfig.MaxFailureRatio != 0 ) {
+				    	fmt.Printf("        max_failure_ratio %d\n",theServices[serviceID].Spec.UpdateConfig.MaxFailureRatio)
+				    }
+//				    if ( theServices[serviceID].Spec.UpdateConfig.Order != "" ) {
+//				    	fmt.Printf("        order: %s\n",theServices[serviceID].Spec.UpdateConfig.Order)
+//				    }
+				}
+//				
+//				
+//				   order is not supported till v 3.3 of the compose file format, so commenting out for now.
+//				
+//				
+				if ( theServices[serviceID].Spec.RollbackConfig != nil) {
+					fmt.Println("      rollback_config:")
+				    if ( theServices[serviceID].Spec.UpdateConfig.Parallelism != 0 ) {
+				    	fmt.Printf("        parallelism: %d\n",theServices[serviceID].Spec.UpdateConfig.Parallelism)
+				    }
+				    if ( theServices[serviceID].Spec.UpdateConfig.Delay.String() != "" ) {
+				    	fmt.Printf("        delay: %s\n",theServices[serviceID].Spec.UpdateConfig.Delay.String())
+				    }
+   				    if ( theServices[serviceID].Spec.UpdateConfig.FailureAction != "" ) {
+				    	fmt.Printf("        failure_action: %s\n",theServices[serviceID].Spec.UpdateConfig.FailureAction)
+				    }
+				    if ( theServices[serviceID].Spec.UpdateConfig.Monitor.String() != "" ) {
+				    	fmt.Printf("        monitor: %s\n",theServices[serviceID].Spec.UpdateConfig.Monitor.String())
+				    }
+				    if ( theServices[serviceID].Spec.UpdateConfig.MaxFailureRatio != 0 ) {
+				    	fmt.Printf("        max_failure_ratio %d\n",theServices[serviceID].Spec.UpdateConfig.MaxFailureRatio)
+				    }
+//				    if ( theServices[serviceID].Spec.UpdateConfig.Order != "" ) {
+//				    	fmt.Printf("        order: %s\n",theServices[serviceID].Spec.UpdateConfig.Order)
+//				    }
+				}
+
 				//if they have constraints we need to deal with that
 				if len(theServices[serviceID].Spec.TaskTemplate.Placement.Constraints) != 0 {
 					fmt.Println("      placement: ")
@@ -134,6 +182,27 @@ func main() {
 						} else {
 							fmt.Println("          -",constraint)
 						}	
+					}
+				}
+				if ( theServices[serviceID].Spec.TaskTemplate.Resources.Limits != nil || theServices[serviceID].Spec.TaskTemplate.Resources.Reservations != nil) {
+					fmt.Println("      resources: ")
+					if ( theServices[serviceID].Spec.TaskTemplate.Resources.Limits != nil ) {
+						cpuInfo := float64(theServices[serviceID].Spec.TaskTemplate.Resources.Limits.NanoCPUs)
+						memInfo := float64(theServices[serviceID].Spec.TaskTemplate.Resources.Limits.MemoryBytes)
+						cpuInfo = cpuInfo / 1000000000
+						memInfo = memInfo / 1048576
+						fmt.Println("        limits:")
+						fmt.Printf("          cpus: '%.2f'\n",cpuInfo)
+						fmt.Printf("          memory: %.0fM\n",memInfo)
+					}
+					if ( theServices[serviceID].Spec.TaskTemplate.Resources.Reservations != nil ) {
+						cpuInfo := float64(theServices[serviceID].Spec.TaskTemplate.Resources.Limits.NanoCPUs)
+						memInfo := float64(theServices[serviceID].Spec.TaskTemplate.Resources.Limits.MemoryBytes)
+						cpuInfo = cpuInfo / 1000000000
+						memInfo = memInfo / 1048576
+						fmt.Println("        reservations:")
+						fmt.Printf("          cpus: '%.2f'\n",cpuInfo)
+						fmt.Printf("          memory: %.0fM\n",memInfo)
 					}
 				}
 				//Ahhh yes the multiple locations of labels, this is for the deploy section
