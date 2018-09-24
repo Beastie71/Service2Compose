@@ -308,7 +308,7 @@ func main() {
 			if len(myNetworks) != 0 {
 				fmt.Println("networks:")
 				for netID,netName := range myNetworks {
-					if theNetworks[netID].Labels["com.docker.stack.namespace"] != "" {
+					if theNetworks[netID].Labels["com.docker.stack.namespace"] == *stackPtr {
 						if *unamePtr {
 							prefix := stackname + "_"
 							theName := strings.TrimPrefix(netName, prefix)
