@@ -294,7 +294,7 @@ func main() {
 						fmt.Println("      driver:", theServices[serviceID].Spec.TaskTemplate.LogDriver.Name)
 						fmt.Println("      options:")
 						for key, value := range theServices[serviceID].Spec.TaskTemplate.LogDriver.Options  {
-							fmt.Printf("        %s: %s\n",key,value)
+							fmt.Printf("        %s: \"%s\"\n",key,value)
 						}
 					} else {
 						fmt.Println("    logging:")
