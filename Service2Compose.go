@@ -252,7 +252,7 @@ func processStack(stackName string, theStacks map[string][]string, serviceList m
 				}
 			} else {
 				fmt.Fprintf(&outStr, "    logging:\n")
-				fmt.Fprintf(&outStr, "      driver:%s\n", serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name)
+				fmt.Fprintf(&outStr, "      driver: %s\n", serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name)
 			}
 		}
 		fmt.Fprintf(&outStr, "\n")
