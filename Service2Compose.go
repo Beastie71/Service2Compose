@@ -245,7 +245,7 @@ func processStack(stackName string, theStacks map[string][]string, serviceList m
 			} else if serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name != "" &&
 				len(serviceList[serviceID].Spec.TaskTemplate.LogDriver.Options) != 0 {
 				fmt.Fprintf(&outStr, "    logging:\n")
-				fmt.Fprintf(&outStr, "      driver:%s\n", serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name)
+				fmt.Fprintf(&outStr, "      driver: %s\n", serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name)
 				fmt.Fprintf(&outStr, "      options:\n")
 				for key, value := range serviceList[serviceID].Spec.TaskTemplate.LogDriver.Options {
 					fmt.Fprintf(&outStr, "        %s: \"%s\"\n", key, value)
