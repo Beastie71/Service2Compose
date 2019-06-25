@@ -307,7 +307,7 @@ func processStack(stackName string, theStacks map[string][]string, serviceList m
 		}
 	}
 	fmt.Println(outStr.String())
-	fmt.Println("********************************************************************************************")
+
 }
 
 func main() {
@@ -355,9 +355,10 @@ func main() {
 	for stackname, _ := range stacks {
 		matched, _ = regexp.MatchString(*stackPtr, stackname)
 		if matched || all {
-			fmt.Println("Stackname is - ", stackname)
-			fmt.Println()
+			fmt.Printf("//******** Stackname is - %s *******************//\n", stackname)
+			fmt.Println("//********************************************************************************************//")
 			processStack(stackname, stacks, theServices, theNetworks)
+			fmt.Println("//********************************************************************************************//")
 		}
 	}
 }
