@@ -56,13 +56,11 @@ func buildStacks(theServices []swarm.Service, servicesbyID map[string]swarm.Serv
 	return thisStacks
 }
 
-func processStack(stackName string, theStacks map[string][]string, serviceList map[string]swarm.Service, networkList map[string]types.NetworkResource) {
-
-	var outStr bytes.Buffer
+func processStack(stackName string, theStacks map[string][]string, serviceList map[string]swarm.Service, networkList map[string]types.NetworkResource) (outStr bytes.Buffer, myNetworks map[string]string) {
 
 	fmt.Fprintf(&outStr, "version: '3.3'\n\n")
 	fmt.Fprintf(&outStr, "services:\n")
-	myNetworks := make(map[string]string)
+	myNetworks = make(map[string]string)
 	for _, serviceID := range theStacks[stackName] {
 		if len(serviceList[serviceID].Spec.Networks) != 0 && len(serviceList[serviceID].Spec.Networks[0].Aliases) != 0 {
 			fmt.Fprintf(&outStr, "  %s:\n", serviceList[serviceID].Spec.Networks[0].Aliases[0])
@@ -259,11 +257,16 @@ func processStack(stackName string, theStacks map[string][]string, serviceList m
 		}
 		fmt.Fprintf(&outStr, "\n")
 	}
+	return outStr, myNetworks
+}
+
+func processNetworkInfo(stackName string, outStr bytes.Buffer, networkList map[string]types.NetworkResource, foundNetworks map[string]string) bytes.Buffer {
+
 	//So networks, need to dump those out, I am assuming in our implementation that if its not
 	//external its overlay, and thats cause thats how we do it, call me lazy it works for us
-	if len(myNetworks) != 0 {
+	if len(foundNetworks) != 0 {
 		fmt.Fprintf(&outStr, "networks:\n")
-		for netID, netName := range myNetworks {
+		for netID, netName := range foundNetworks {
 			if networkList[netID].Labels["com.docker.stack.namespace"] == stackName {
 				if defaultName {
 					prefix := stackName + "_"
@@ -306,8 +309,7 @@ func processStack(stackName string, theStacks map[string][]string, serviceList m
 			}
 		}
 	}
-	fmt.Println(outStr.String())
-
+	return outStr
 }
 
 func main() {
@@ -346,9 +348,9 @@ func main() {
 		all = false
 	}
 
-	theNetworks := generateNetworkInfo(cli)
-	theServices := make(map[string]swarm.Service)
-	stacks := buildStacks(services, theServices)
+	allTheNetworks := generateNetworkInfo(cli)
+	allTheServices := make(map[string]swarm.Service)
+	stacks := buildStacks(services, allTheServices)
 	//setup stuff to do matching for the stackname and what we actually want for output
 	//so now we go through the stacks to find the one(s) that match the request and then do some work
 
@@ -357,7 +359,9 @@ func main() {
 		if matched || all {
 			fmt.Printf("//******** Stackname is - %s *******************//\n", stackname)
 			fmt.Println("//********************************************************************************************//")
-			processStack(stackname, stacks, theServices, theNetworks)
+			stackCompose, myNetworks := processStack(stackname, stacks, allTheServices, allTheNetworks)
+			stackCompose = processNetworkInfo(stackname, stackCompose, allTheNetworks, myNetworks)
+			fmt.Println(stackCompose.String())
 			fmt.Println("//********************************************************************************************//")
 		}
 	}
