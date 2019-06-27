@@ -5,16 +5,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/docker/cli/cli/compose/convert"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-
-	//"github.com/docker/docker/api"
 	"flag"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/docker/cli/cli/compose/convert"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 
 	"github.com/docker/docker/api/types/swarm"
 )
