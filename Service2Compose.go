@@ -55,6 +55,128 @@ func buildStacks(theServices []swarm.Service, servicesbyID map[string]swarm.Serv
 	return thisStacks
 }
 
+func restartPolicyOut(thePolicy swarm.RestartPolicy) string {
+
+	var outPut bytes.Buffer
+
+	fmt.Fprintf(&outPut, "      restart_policy:\n")
+	fmt.Fprintf(&outPut, "        condition: %s\n", thePolicy.Condition)
+	if thePolicy.Delay == nil {
+		fmt.Fprintf(&outPut, "        delay: 3s\n")
+	} else {
+		fmt.Fprintf(&outPut, "        delay: %s\n", thePolicy.Delay)
+	}
+	if thePolicy.MaxAttempts == nil {
+		fmt.Fprintf(&outPut, "        max_attempts: 0\n")
+	} else {
+		fmt.Fprintf(&outPut, "        max_attempts: %s\n", strconv.FormatUint(uint64(*thePolicy.MaxAttempts), 10))
+	}
+	if thePolicy.Window == nil {
+		fmt.Fprintf(&outPut, "        window: 0s\n")
+	} else {
+		fmt.Fprintf(&outPut, "        window: %s\n", thePolicy.Window)
+	}
+	return outPut.String()
+}
+
+func uporrollConfigOut(theConfig swarm.UpdateConfig) string {
+
+	var outPut bytes.Buffer
+
+	if theConfig.Parallelism != 0 {
+		fmt.Fprintf(&outPut, "        parallelism: %d\n", theConfig.Parallelism)
+	}
+	if theConfig.Delay.String() != "" {
+		fmt.Fprintf(&outPut, "        delay: %s\n", theConfig.Delay.String())
+	}
+	if theConfig.FailureAction != "" {
+		fmt.Fprintf(&outPut, "        failure_action: %s\n", theConfig.FailureAction)
+	}
+	if theConfig.Monitor.String() != "" {
+		fmt.Fprintf(&outPut, "        monitor: %s\n", theConfig.Monitor.String())
+	}
+	if theConfig.MaxFailureRatio != 0 {
+		fmt.Fprintf(&outPut, "        max_failure_ratio %d\n", theConfig.MaxFailureRatio)
+	}
+	return outPut.String()
+
+}
+
+func constraintsOut(thePlacement swarm.Placement) string {
+
+	var outPut bytes.Buffer
+
+	fmt.Fprintf(&outPut, "      placement: \n")
+	fmt.Fprintf(&outPut, "        constraints:\n")
+	fmt.Fprintf(&outPut, "          - ")
+	for loop, constraint := range thePlacement.Constraints {
+		if loop == 0 {
+			fmt.Fprintf(&outPut, "%s\n", constraint)
+		} else {
+			fmt.Fprintf(&outPut, "          - %s\n", constraint)
+		}
+	}
+	return outPut.String()
+
+}
+
+func memandcpuOut(theInfo swarm.Resources) string {
+
+	var outPut bytes.Buffer
+
+	cpuInfo := float64(theInfo.NanoCPUs)
+	memInfo := float64(theInfo.MemoryBytes)
+	cpuInfo = cpuInfo / 1000000000
+	memInfo = memInfo / 1048576
+	fmt.Fprintf(&outPut, "          cpus: '%.2f'\n", cpuInfo)
+	fmt.Fprintf(&outPut, "          memory: %.0fM\n", memInfo)
+	return outPut.String()
+
+}
+
+func labelsOut(theLabels map[string]string, theIndent int) string {
+
+	var outPut bytes.Buffer
+	var spacer bytes.Buffer
+
+	for counter := 0; counter < theIndent; counter++ {
+		fmt.Fprintf(&spacer, " ")
+	}
+	fmt.Fprintf(&outPut, "%slabels:\n", &spacer)
+	for key, value := range theLabels {
+		fmt.Fprintf(&outPut, "%s  - ", &spacer)
+		fmt.Fprintf(&outPut, "%s=%s\n", strings.Trim(key, " "), strings.Trim(value, " "))
+	}
+	return outPut.String()
+
+}
+
+func logInfoOut(logInfo swarm.Driver) string {
+
+	var outPut bytes.Buffer
+
+	if logInfo.Name == "" && (len(logInfo.Options) != 0) {
+		fmt.Fprintf(&outPut, "    logging:\n")
+		fmt.Fprintf(&outPut, "      options:\n")
+		for key, value := range logInfo.Options {
+			fmt.Fprintf(&outPut, "        %s: %s\n", key, value)
+		}
+	} else if logInfo.Name != "" &&
+		len(logInfo.Options) != 0 {
+		fmt.Fprintf(&outPut, "    logging:\n")
+		fmt.Fprintf(&outPut, "      driver: %s\n", logInfo.Name)
+		fmt.Fprintf(&outPut, "      options:\n")
+		for key, value := range logInfo.Options {
+			fmt.Fprintf(&outPut, "        %s: \"%s\"\n", key, value)
+		}
+	} else {
+		fmt.Fprintf(&outPut, "    logging:\n")
+		fmt.Fprintf(&outPut, "      driver: %s\n", logInfo.Name)
+	}
+
+	return outPut.String()
+}
+
 func processStack(stackName string, theStacks map[string][]string, serviceList map[string]swarm.Service, networkList map[string]types.NetworkResource) (outStr bytes.Buffer, myNetworks map[string]string) {
 
 	fmt.Fprintf(&outStr, "version: '3.3'\n\n")
@@ -73,100 +195,33 @@ func processStack(stackName string, theStacks map[string][]string, serviceList m
 		fmt.Fprintf(&outStr, "      replicas: %s\n", strconv.FormatUint(replicas, 10))
 		//if they have a restart policy, we need to deal with it
 		if serviceList[serviceID].Spec.TaskTemplate.RestartPolicy != nil {
-			fmt.Fprintf(&outStr, "      restart_policy:\n")
-			fmt.Fprintf(&outStr, "        condition: %s\n", serviceList[serviceID].Spec.TaskTemplate.RestartPolicy.Condition)
-			if serviceList[serviceID].Spec.TaskTemplate.RestartPolicy.Delay == nil {
-				fmt.Fprintf(&outStr, "        delay: 3s\n")
-			} else {
-				fmt.Fprintf(&outStr, "        delay: %s\n", serviceList[serviceID].Spec.TaskTemplate.RestartPolicy.Delay)
-			}
-			if serviceList[serviceID].Spec.TaskTemplate.RestartPolicy.MaxAttempts == nil {
-				fmt.Fprintf(&outStr, "        max_attempts: 0\n")
-			} else {
-				fmt.Fprintf(&outStr, "        max_attempts: %s\n", strconv.FormatUint(uint64(*serviceList[serviceID].Spec.TaskTemplate.RestartPolicy.MaxAttempts), 10))
-			}
-			if serviceList[serviceID].Spec.TaskTemplate.RestartPolicy.Window == nil {
-				fmt.Fprintf(&outStr, "        window: 0s\n")
-			} else {
-				fmt.Fprintf(&outStr, "        window: %s\n", serviceList[serviceID].Spec.TaskTemplate.RestartPolicy.Window)
-			}
+			fmt.Fprintf(&outStr, "%s", restartPolicyOut(*serviceList[serviceID].Spec.TaskTemplate.RestartPolicy))
 		}
 		if serviceList[serviceID].Spec.UpdateConfig != nil {
 			fmt.Fprintf(&outStr, "      update_config:\n")
-			if serviceList[serviceID].Spec.UpdateConfig.Parallelism != 0 {
-				fmt.Fprintf(&outStr, "        parallelism: %d\n", serviceList[serviceID].Spec.UpdateConfig.Parallelism)
-			}
-			if serviceList[serviceID].Spec.UpdateConfig.Delay.String() != "" {
-				fmt.Fprintf(&outStr, "        delay: %s\n", serviceList[serviceID].Spec.UpdateConfig.Delay.String())
-			}
-			if serviceList[serviceID].Spec.UpdateConfig.FailureAction != "" {
-				fmt.Fprintf(&outStr, "        failure_action: %s\n", serviceList[serviceID].Spec.UpdateConfig.FailureAction)
-			}
-			if serviceList[serviceID].Spec.UpdateConfig.Monitor.String() != "" {
-				fmt.Fprintf(&outStr, "        monitor: %s\n", serviceList[serviceID].Spec.UpdateConfig.Monitor.String())
-			}
-			if serviceList[serviceID].Spec.UpdateConfig.MaxFailureRatio != 0 {
-				fmt.Fprintf(&outStr, "        max_failure_ratio %d\n", serviceList[serviceID].Spec.UpdateConfig.MaxFailureRatio)
-			}
+			fmt.Fprintf(&outStr, "%s", uporrollConfigOut(*serviceList[serviceID].Spec.UpdateConfig))
 		}
 		if serviceList[serviceID].Spec.RollbackConfig != nil {
 			fmt.Fprintf(&outStr, "      rollback_config:\n")
-			if serviceList[serviceID].Spec.UpdateConfig.Parallelism != 0 {
-				fmt.Fprintf(&outStr, "        parallelism: %d\n", serviceList[serviceID].Spec.UpdateConfig.Parallelism)
-			}
-			if serviceList[serviceID].Spec.UpdateConfig.Delay.String() != "" {
-				fmt.Fprintf(&outStr, "        delay: %s\n", serviceList[serviceID].Spec.UpdateConfig.Delay.String())
-			}
-			if serviceList[serviceID].Spec.UpdateConfig.FailureAction != "" {
-				fmt.Fprintf(&outStr, "        failure_action: %s\n", serviceList[serviceID].Spec.UpdateConfig.FailureAction)
-			}
-			if serviceList[serviceID].Spec.UpdateConfig.Monitor.String() != "" {
-				fmt.Fprintf(&outStr, "        monitor: %s\n", serviceList[serviceID].Spec.UpdateConfig.Monitor.String())
-			}
-			if serviceList[serviceID].Spec.UpdateConfig.MaxFailureRatio != 0 {
-				fmt.Fprintf(&outStr, "        max_failure_ratio %d\n", serviceList[serviceID].Spec.UpdateConfig.MaxFailureRatio)
-			}
+			fmt.Fprintf(&outStr, "%s", uporrollConfigOut(*serviceList[serviceID].Spec.RollbackConfig))
 		}
 		if len(serviceList[serviceID].Spec.TaskTemplate.Placement.Constraints) != 0 {
-			fmt.Fprintf(&outStr, "      placement: \n")
-			fmt.Fprintf(&outStr, "        constraints:\n")
-			fmt.Fprintf(&outStr, "          - ")
-			for loop, constraint := range serviceList[serviceID].Spec.TaskTemplate.Placement.Constraints {
-				if loop == 0 {
-					fmt.Fprintf(&outStr, "%s\n", constraint)
-				} else {
-					fmt.Fprintf(&outStr, "          - %s\n", constraint)
-				}
-			}
+			fmt.Fprintf(&outStr, "%s", constraintsOut(*serviceList[serviceID].Spec.TaskTemplate.Placement))
 		}
 		if serviceList[serviceID].Spec.TaskTemplate.Resources.Limits != nil || serviceList[serviceID].Spec.TaskTemplate.Resources.Reservations != nil {
 			fmt.Fprintf(&outStr, "      resources: \n")
 			if serviceList[serviceID].Spec.TaskTemplate.Resources.Limits != nil {
-				cpuInfo := float64(serviceList[serviceID].Spec.TaskTemplate.Resources.Limits.NanoCPUs)
-				memInfo := float64(serviceList[serviceID].Spec.TaskTemplate.Resources.Limits.MemoryBytes)
-				cpuInfo = cpuInfo / 1000000000
-				memInfo = memInfo / 1048576
 				fmt.Fprintf(&outStr, "        limits:\n")
-				fmt.Fprintf(&outStr, "          cpus: '%.2f'\n", cpuInfo)
-				fmt.Fprintf(&outStr, "          memory: %.0fM\n", memInfo)
+				fmt.Fprintf(&outStr, "%s", memandcpuOut(*serviceList[serviceID].Spec.TaskTemplate.Resources.Limits))
 			}
 			if serviceList[serviceID].Spec.TaskTemplate.Resources.Reservations != nil {
-				cpuInfo := float64(serviceList[serviceID].Spec.TaskTemplate.Resources.Limits.NanoCPUs)
-				memInfo := float64(serviceList[serviceID].Spec.TaskTemplate.Resources.Limits.MemoryBytes)
-				cpuInfo = cpuInfo / 1000000000
-				memInfo = memInfo / 1048576
 				fmt.Fprintf(&outStr, "        reservations:\n")
-				fmt.Fprintf(&outStr, "          cpus: '%.2f'\n", cpuInfo)
-				fmt.Fprintf(&outStr, "          memory: %.0fM\n", memInfo)
+				fmt.Fprintf(&outStr, "%s", memandcpuOut(*serviceList[serviceID].Spec.TaskTemplate.Resources.Reservations))
 			}
 		}
 		//Ahhh yes the multiple locations of labels, this is for the deploy section
 		if len(serviceList[serviceID].Spec.Annotations.Labels) != 0 {
-			fmt.Fprintf(&outStr, "      labels:\n")
-			for key, value := range serviceList[serviceID].Spec.Annotations.Labels {
-				fmt.Fprintf(&outStr, "        - ")
-				fmt.Fprintf(&outStr, "%s=%s\n", strings.Trim(key, " "), strings.Trim(value, " "))
-			}
+			fmt.Fprintf(&outStr, "%s", labelsOut(serviceList[serviceID].Spec.Annotations.Labels, 6))
 		}
 		//And any published ports...
 		if len(serviceList[serviceID].Endpoint.Spec.Ports) != 0 {
@@ -213,10 +268,7 @@ func processStack(stackName string, theStacks map[string][]string, serviceList m
 		}
 		//labels again, for the service specification
 		if len(serviceList[serviceID].Spec.TaskTemplate.ContainerSpec.Labels) != 0 {
-			fmt.Fprintf(&outStr, "    labels:\n")
-			for key, value := range serviceList[serviceID].Spec.TaskTemplate.ContainerSpec.Labels {
-				fmt.Fprintf(&outStr, "      - %s=%s\n", key, value)
-			}
+			fmt.Fprintf(&outStr, "%s", labelsOut(serviceList[serviceID].Spec.TaskTemplate.ContainerSpec.Labels, 4))
 		}
 		//Mounts for the service specification
 		if len(serviceList[serviceID].Spec.TaskTemplate.ContainerSpec.Mounts) != 0 {
@@ -234,25 +286,7 @@ func processStack(stackName string, theStacks map[string][]string, serviceList m
 		}
 		//Log driver information gathered and provided
 		if serviceList[serviceID].Spec.TaskTemplate.LogDriver != nil {
-			if serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name == "" &&
-				len(serviceList[serviceID].Spec.TaskTemplate.LogDriver.Options) != 0 {
-				fmt.Fprintf(&outStr, "    logging:\n")
-				fmt.Fprintf(&outStr, "      options:\n")
-				for key, value := range serviceList[serviceID].Spec.TaskTemplate.LogDriver.Options {
-					fmt.Fprintf(&outStr, "        %s: %s\n", key, value)
-				}
-			} else if serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name != "" &&
-				len(serviceList[serviceID].Spec.TaskTemplate.LogDriver.Options) != 0 {
-				fmt.Fprintf(&outStr, "    logging:\n")
-				fmt.Fprintf(&outStr, "      driver: %s\n", serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name)
-				fmt.Fprintf(&outStr, "      options:\n")
-				for key, value := range serviceList[serviceID].Spec.TaskTemplate.LogDriver.Options {
-					fmt.Fprintf(&outStr, "        %s: \"%s\"\n", key, value)
-				}
-			} else {
-				fmt.Fprintf(&outStr, "    logging:\n")
-				fmt.Fprintf(&outStr, "      driver: %s\n", serviceList[serviceID].Spec.TaskTemplate.LogDriver.Name)
-			}
+			fmt.Fprintf(&outStr, "%s", logInfoOut(*serviceList[serviceID].Spec.TaskTemplate.LogDriver))
 		}
 		fmt.Fprintf(&outStr, "\n")
 	}
